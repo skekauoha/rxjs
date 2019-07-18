@@ -10,7 +10,7 @@ export class AboutComponent implements OnInit {
   constructor() {}
 
   ngOnInit() {
-    // Callback Hell
+    // Callback Hell -> Why we use observables and the rxjs library to avoid the snippet below
     // document.addEventListener("click", evt => {
     //   console.log(evt);
 
@@ -30,6 +30,9 @@ export class AboutComponent implements OnInit {
     // param1: interval time when value is emitted
     // interval(1000) -> emit value every 1 second
     const interval$ = interval(1000); // -> Observable<number> // Definition of a stream, not an instance
+    const sub = interval$.subscribe(val => console.log("stream 1: ", +val)); // -> Saving subscription of interval$ to a const
+
+    setTimeout(() => sub.unsubscribe(), 5000); // -> After 5 seconds unsubscribe from sub which is the subscribed observable stream instance of interval$
 
     // interval$.subscribe(val => console.log("stream 1: " + val)); // -> subscribing creates Observable stream instance
     // interval$.subscribe(val => console.log("stream 2: " + val)); // -> subscribing creates Observable stream instance
@@ -48,6 +51,10 @@ export class AboutComponent implements OnInit {
     // fromEvent(document, 'click) -> clicking on any part of the document returns the definition of a stream
     const click$ = fromEvent(document, "click"); // -> Observable<Event> // Definition of a stream, not an instance
 
-    click$.subscribe(evt => console.log(evt)); // -> subscribing creates Observable stream instance
+    click$.subscribe(
+      evt => console.log(evt), // value being emitted
+      err => console.log(err), // err object if err occurred
+      () => console.log("completed") // callback to call once observable is completed
+    ); // -> subscribing creates Observable stream instance
   }
 }
