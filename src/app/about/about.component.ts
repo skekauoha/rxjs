@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewEncapsulation } from "@angular/core";
-import { interval, timer, fromEvent } from "rxjs";
+import { interval, timer, fromEvent, Observable } from "rxjs";
 
 @Component({
   selector: "about",
@@ -10,51 +10,38 @@ export class AboutComponent implements OnInit {
   constructor() {}
 
   ngOnInit() {
-    // Callback Hell -> Why we use observables and the rxjs library to avoid the snippet below
-    // document.addEventListener("click", evt => {
-    //   console.log(evt);
+    const http$ = Observable.create(observer => {
+      // -> The OBSERVER is what allows us to emit values, error out the observable, or complete the observable
+      fetch("/api/courses")
+        .then(response => {
+          return response.json();
+        })
+        .then(body => {
+          observer.next(body); // -> .next() emits the value
+          observer.complete(); // -> now that we emitted the value, complete the observable
+        })
+        .catch(err => observer.error(err));
+    });
 
-    //   setTimeout(() => {
-    //     console.log("finished...");
-    //   }, 3000);
-
-    //   let counter = 0;
-
-    //   setInterval(() => {
-    //     console.log(counter);
-    //     counter++;
-    //   }, 1000);
-    // });
-
-    // ** interval **
-    // param1: interval time when value is emitted
-    // interval(1000) -> emit value every 1 second
-    const interval$ = interval(1000); // -> Observable<number> // Definition of a stream, not an instance
-    const sub = interval$.subscribe(val => console.log("stream 1: ", +val)); // -> Saving subscription of interval$ to a const
-
-    setTimeout(() => sub.unsubscribe(), 5000); // -> After 5 seconds unsubscribe from sub which is the subscribed observable stream instance of interval$
-
-    // interval$.subscribe(val => console.log("stream 1: " + val)); // -> subscribing creates Observable stream instance
-    // interval$.subscribe(val => console.log("stream 2: " + val)); // -> subscribing creates Observable stream instance
-
-    // ** timer **
-    // param1: initial delay that we will before starting
-    // param2: interval time that emits
-    // timer(3000, 1000) -> start after 3 seconds and emit every 1 second
-    const timer$ = timer(3000, 1000); // -> Observable<number> // Definition of a stream, not an instance
-
-    // timer$.subscribe(val => console.log("timer 1: ", val)); // -> subscribing creates Observable stream instance
-
-    // ** fromEvent **
-    // param1: source of the event
-    // param2: event that we are subscribing to
-    // fromEvent(document, 'click) -> clicking on any part of the document returns the definition of a stream
-    const click$ = fromEvent(document, "click"); // -> Observable<Event> // Definition of a stream, not an instance
-
-    click$.subscribe(
-      evt => console.log(evt), // value being emitted
-      err => console.log(err), // err object if err occurred
-      () => console.log("completed") // callback to call once observable is completed
-    ); // -> subscribing creates Observable stream instance
+    http$.subscribe(
+      courses => console.log(courses),
+      () => {},
+      () => console.log("complete")
+    );
   }
 }
+
+// observer methods
+// 1. next - emit a new value for our stream
+// 2. error - error out the stream
+// 3. complete - end the stream
+
+// The observer is what we use internally to implement the observable
+
+// const http$ = Observable.create(observer => {
+//   observer.complete(); // -> this function would only get called on subscribe of http$
+// });
+
+// WHY do all this work when we could've just as easily called fetch to get data?
+// -> Now we can use rxjs operators to combine this stream with other streams
+// such as click handlers, timeouts, or other http requests.
