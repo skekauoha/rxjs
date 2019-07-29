@@ -1,16 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { Course } from "../model/course";
 import { interval, noop, Observable, of, throwError, timer } from "rxjs";
-import {
-  catchError,
-  delay,
-  delayWhen,
-  finalize,
-  map,
-  retryWhen,
-  shareReplay,
-  tap
-} from "rxjs/operators";
+import { map, filter } from "rxjs/operators";
 import { createHttpObservable } from "../common/util";
 import { Store } from "../common/store.service";
 
@@ -20,31 +11,24 @@ import { Store } from "../common/store.service";
   styleUrls: ["./home.component.css"]
 })
 export class HomeComponent implements OnInit {
-  beginnerCourses: Course[];
+  beginnerCourses$: Observable<Course[]>;
 
-  advancedCourses: Course[];
+  advancedCourses$: Observable<Course[]>;
 
   constructor(private store: Store) {}
 
   ngOnInit() {
     const http$ = createHttpObservable("/api/courses");
-    const courses$ = http$.pipe(map(res => Object.values(res["payload"]))); // -> pipe allows you to chain multiple rx operators in order to produce a new observable
-    //    -> In this case we will take the http$ observable and pipe it into the rx map operator
+    const courses$: Observable<Course[]> = http$.pipe(
+      map(res => Object.values(res["payload"]))
+    );
 
-    // This works, but you should avoid adding too much logic in the subscribe.
-    // It's not scalable and we want to avoid callbacks or nested subscribes
-    // considered an imperative approach
-    courses$.subscribe(
-      courses => {
-        this.beginnerCourses = courses.filter(
-          course => course.category == "BEGINNER"
-        );
-        this.advancedCourses = courses.filter(
-          course => course.category == "ADVANCED"
-        );
-      },
-      () => {},
-      () => console.log("complete")
+    this.beginnerCourses$ = courses$.pipe(
+      map(courses => courses.filter(course => course.category == "BEGINNER"))
+    );
+
+    this.advancedCourses$ = courses$.pipe(
+      map(courses => courses.filter(course => course.category == "ADVANCED"))
     );
   }
 }
