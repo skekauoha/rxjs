@@ -10,8 +10,6 @@ import { Course } from "../model/course";
   styleUrls: ["./about.component.css"]
 })
 export class AboutComponent implements OnInit {
-  beginnersCourses: Course[];
-
   constructor() {}
 
   ngOnInit() {
@@ -23,14 +21,7 @@ export class AboutComponent implements OnInit {
     // It's not scalable and we want to avoid callbacks or nested subscribes
     // considered an imperative approach
     courses$.subscribe(
-      courses => {
-        this.beginnersCourses = courses.filter(
-          course => course.category == "BEGINNER"
-        );
-        this.beginnersCourses = courses.filter(
-          course => course.category == "ADVANCED"
-        );
-      },
+      courses => console.log(courses),
       () => {},
       () => console.log("complete")
     );
