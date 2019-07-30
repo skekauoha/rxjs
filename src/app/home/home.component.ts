@@ -20,7 +20,6 @@ export class HomeComponent implements OnInit {
   ngOnInit() {
     const http$ = createHttpObservable("/api/courses");
     const courses$: Observable<Course[]> = http$.pipe(
-      tap(() => console.log("http request executed")),
       map(res => Object.values(res["payload"])),
       // shareReplay will pass on the values from the http request rather than making a request for each subscriber and creating a new stream
       shareReplay()
