@@ -23,6 +23,7 @@ import {
 import { fromPromise } from "rxjs/internal-compatibility";
 import { Store } from "../common/store.service";
 import { saveCourse } from "../../../server/save-course.route";
+import { LineToLineMappedSource } from "webpack-sources";
 
 @Component({
   selector: "course-dialog",
@@ -58,11 +59,13 @@ export class CourseDialogComponent implements AfterViewInit, OnInit {
     this.form.valueChanges
       .pipe(
         filter(() => this.form.valid),
-        // concatMap will ensure that each obs completes before it moves to the next
-        // all the obs are then concatenated together
-        // In this case each change in the form will execute an http request
-        // and each change will wait for the subsequent change to execute
+        // mergeMap does not wait for one request to complete before the next one is initiated
+        // the observables will run in parallel.
+
+        // If the order of the observables values is important, use concatMap
+        // If you want the observables to ruin in parallel, use mergeMap
         concatMap(changes => this.saveCourse(changes))
+        // mergeMap(changes => this.saveCourse(changes))
       )
       .subscribe();
   }
@@ -79,7 +82,12 @@ export class CourseDialogComponent implements AfterViewInit, OnInit {
     );
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() {
+    fromEvent(this.saveButton.nativeElement, "click")
+      // exhaustMap will ignore extra values while the current observable is still ongoing
+      .pipe(exhaustMap(() => this.saveCourse(this.form.value)))
+      .subscribe();
+  }
 
   save() {
     this.store
