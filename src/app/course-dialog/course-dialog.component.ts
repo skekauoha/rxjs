@@ -23,7 +23,6 @@ import {
 import { fromPromise } from "rxjs/internal-compatibility";
 import { Store } from "../common/store.service";
 import { saveCourse } from "../../../server/save-course.route";
-import { LineToLineMappedSource } from "webpack-sources";
 
 @Component({
   selector: "course-dialog",
