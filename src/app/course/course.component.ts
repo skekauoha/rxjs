@@ -18,9 +18,11 @@ import {
   switchMap,
   withLatestFrom,
   concatAll,
-  shareReplay
+  shareReplay,
+  throttle,
+  throttleTime
 } from "rxjs/operators";
-import { merge, fromEvent, Observable, concat } from "rxjs";
+import { merge, fromEvent, Observable, concat, interval } from "rxjs";
 import { Lesson } from "../model/lesson";
 import { createHttpObservable } from "../common/util";
 import { Store } from "../common/store.service";
@@ -46,20 +48,27 @@ export class CourseComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    const searchLessons$ = fromEvent<any>(
-      this.input.nativeElement,
-      "keyup"
-    ).pipe(
-      map(event => event.target.value),
-      debounceTime(400),
-      distinctUntilChanged(),
-      // switchMap cancels the previous observable and switches to the new observable
-      switchMap(search => this.loadLessons(search))
-    );
+    // this.lessons$ = fromEvent<any>(this.input.nativeElement, "keyup").pipe(
+    //   map(event => event.target.value),
+    //   startWith(""),
+    //   debounceTime(400),
+    //   distinctUntilChanged(),
+    //   // switchMap cancels the previous observable and switches to the new observable
+    //   switchMap(search => this.loadLessons(search))
+    // );
 
-    const initialLessons$ = this.loadLessons();
-
-    this.lessons$ = concat(initialLessons$, searchLessons$);
+    fromEvent<any>(this.input.nativeElement, "keyup")
+      .pipe(
+        map(event => event.target.value),
+        startWith(""),
+        // debouncing is about waiting for a value to become stable
+        // debounceTime(400)
+        // throttle limits the output by limiting the number of values that can be emitted in a certain interval
+        throttle(() => interval(500)),
+        // throttleTime works as the same above
+        throttleTime(500)
+      )
+      .subscribe(console.log);
   }
 
   loadLessons(search = ""): Observable<Lesson[]> {
