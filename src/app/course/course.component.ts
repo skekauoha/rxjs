@@ -28,17 +28,17 @@ import { RxJsLoggingLevel, debug } from "../common/debug";
   styleUrls: ["./course.component.css"]
 })
 export class CourseComponent implements OnInit, AfterViewInit {
-  courseId: string;
+  courseId: number;
   course$: Observable<Course>;
   lessons$: Observable<Lesson[]>;
 
   @ViewChild("searchInput", { static: true }) input: ElementRef;
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(private route: ActivatedRoute, private store: Store) {}
 
   ngOnInit() {
     this.courseId = this.route.snapshot.params["id"];
-    const course$ = createHttpObservable(`/api/courses/${this.courseId}`);
+    const course$ = this.store.selectCourseById(this.courseId);
     const lesson$ = this.loadLessons();
 
     // forkJoin, call all methods and will wait for the reponses to return in the order they were called.

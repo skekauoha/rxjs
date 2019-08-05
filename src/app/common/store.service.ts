@@ -18,19 +18,13 @@ import { fromPromise } from "rxjs/internal-compatibility";
 })
 export class Store {
   private subject = new BehaviorSubject<Course[]>([]);
-
   courses$: Observable<Course[]> = this.subject.asObservable();
 
   init() {
-    // const http$ = createHttpObservable('/api/courses');
-    // http$
-    //     .pipe(
-    //         tap(() => console.log('HTTP request executed')),
-    //         map(res => Object.values(res['payload']))
-    //     )
-    //     .subscribe(
-    //         courses => this.subject.next(courses)
-    //     );
+    const http$ = createHttpObservable("/api/courses");
+    http$
+      .pipe(map(res => Object.values(res["payload"])))
+      .subscribe(courses => this.subject.next(courses));
   }
 
   selectBeginnerCourses() {
@@ -43,8 +37,7 @@ export class Store {
 
   selectCourseById(courseId: number) {
     return this.courses$.pipe(
-      map(courses => courses.find(course => course.id == courseId)),
-      filter(course => !!course)
+      map(courses => courses.find(course => course.id == courseId))
     );
   }
 
@@ -56,11 +49,9 @@ export class Store {
 
   saveCourse(courseId: number, changes): Observable<any> {
     const courses = this.subject.getValue();
-
     const courseIndex = courses.findIndex(course => course.id == courseId);
 
     const newCourses = courses.slice(0);
-
     newCourses[courseIndex] = {
       ...courses[courseIndex],
       ...changes
